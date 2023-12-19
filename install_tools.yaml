@@ -1,0 +1,49 @@
+- name: ans-playbook
+  hosts: all
+  become: true
+  gather_facts: true
+  tasks: 
+    - name: Update cache
+      apt:
+        update_cache: yes
+    - name: Intalar DependencieS
+      become: true
+      apt:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - software-properties-common
+    - name: Add Docker gpg key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+    - name: Add docker repository
+      apt_repository:
+        repo: deb [arch=amd64] https:download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+        state: present
+        update_cache: yes
+    - name: Install Docker
+      apt:
+        name: docker-ce
+        state: present
+    - name: Add Kubernetes GPG
+      apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        state: present
+    - name: Add Kubernetes repository
+      apt_repository:
+        repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
+        state: present
+        update_cache: yes
+      become: yes
+    - name: Install Kubectl
+      apt:
+        name: kubectl
+        state: present
+    - name: Install Minikube
+      shell: curl -LO https://storage.googleapis.com/minikube/releases/lastest/minikube-linux-arm64 && sudo install minikube-linux-arm64 /usr/local/bin/minikube
+      args:
+        creates: /usr/local/bin/minikube
